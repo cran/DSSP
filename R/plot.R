@@ -47,8 +47,8 @@ plot.dsspMod <- function(x,
     make_grid <- TRUE
   }
 
-  if (!requireNamespace("akima", quietly = TRUE) & contour_plots) {
-    message("'akima' is required for making contour plots but isn't installed.\nSkipping contour plots.\n\n")
+  if (!requireNamespace("interp", quietly = TRUE) & contour_plots) {
+    message("'interp' is required for making contour plots but isn't installed.\nSkipping contour plots.\n\n")
     contour_plots <- FALSE
   }
 
@@ -77,7 +77,7 @@ plot.dsspMod <- function(x,
     ggplot2::geom_point(ggplot2::aes(y, yh)) +
     ggplot2::geom_abline(slope = 1, intercept = 0) +
     ggplot2::labs(
-      title = "Observe vs fitted values",
+      title = "Observed vs fitted values",
       x = paste("observed", x$dep_var),
       y = paste("fitted", x$dep_var)
     )
@@ -112,8 +112,8 @@ plot.dsspMod <- function(x,
   )
 
   if (contour_plots) {
-    interp_y <- akima::interp(x$coords[, 1], x$coords[, 2], y, nx = nx, ny = ny)
-    interp_df <- stats::na.omit(as.data.frame(akima::interp2xyz(interp_y)))
+    interp_y <- interp::interp(x$coords[, 1], x$coords[, 2], y, nx = nx, ny = ny)
+    interp_df <- stats::na.omit(as.data.frame(interp::interp2xyz(interp_y)))
 
     contour <-
       ggplot2::ggplot(data = interp_df, ggplot2::aes(x = x, y = y, z = z)) +
@@ -183,7 +183,18 @@ plot.dsspMod <- function(x,
   }
 
   if (make_grid) {
+    title <- cowplot::ggdraw() + 
+      cowplot::draw_label(
+        "Posterior density and trace plots for model covariates",
+        fontface = 'bold',
+        x = 0,
+        hjust = 0
+      ) +
+      ggplot2::theme(
+        plot.margin = ggplot2::margin(0, 0, 0, 7)
+      )
     covariates_grid <- cowplot::plot_grid(plotlist = covariates_plots, ncol = 2)
+    covariates_grid <- cowplot::plot_grid(title, covariates_grid, ncol = 1, rel_heights = c(0.08, 1))
     print(covariates_grid)
     res <- list(
       diagnostic_plots = diagnostic_plots_return,
